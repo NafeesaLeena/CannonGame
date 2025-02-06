@@ -1,0 +1,259 @@
+<!-- Name: Nafeesa Leena -->
+<!-- Date: October.26,2024 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 4</title>
+    <style>
+        /* Basic reset for HTML and body elements */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* No scrollbars */
+            height: 100%;
+        }
+
+        /* Container for the game area */
+        #gameArea {
+            z-index: 0;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('Background.jpg'); 
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Styling for the cannon body */
+        #cannonBody {
+            position: absolute;
+            bottom: 150px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            width: 204px;
+            height: 89px;
+            background-image: url('Carriage.png'); 
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        /* Styling for the cannon wheel */
+        #cannonWheel {
+            position: absolute;
+            bottom: 160px; 
+            left: 55%; 
+            transform: translateX(-50%);
+            width: 125px;
+            height: 119px;
+            background-image: url('Wheel.png'); 
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        /* Styling for the turret */
+        #turret {
+            position: absolute;
+            bottom: 240px;
+            left: calc(10% + 10px); 
+            width: 234px;
+            height: 46px;
+            background-image: url('Turret.png');
+            transform-origin: bottom center;
+            transform: rotate(0deg); /* Initial rotation angle */
+        }
+
+        /* Styling for the cannonballs */
+        .cannonball {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background-image: url('cannonball.png');
+            border-radius: 50%; /* Makes the cannonball round */
+        }
+
+        /* Styling for the control panel */
+        #controls {
+            display: flex;
+            align-items: center;
+            gap: 10px; 
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 1; /* Keeps controls above game elements */
+        }
+
+        /* Styling for the speed control slider */
+        #speed {
+            width: 300px; 
+            height: auto;
+        }
+
+        /* Styling for the labels */
+        label {
+            font-size: 16px;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Main container for the game elements -->
+    <div id="gameArea"></div>
+    <div id="cannonBody"></div>
+    <div id="turret"></div>
+    <div id="cannonWheel"></div>
+
+    <!-- Control panel for adjusting cannon speed -->
+    <div id="controls">
+        <label for="speed">Cannon Moving Speed:</label>
+        <input type="range" min="1" max="10" id="speed">
+    </div>
+    
+    <script>
+        // Selects key HTML elements by their IDs
+        const cannonBody = document.getElementById('cannonBody');
+        const turret = document.getElementById('turret');
+        const cannonWheel = document.getElementById('cannonWheel');
+        
+        // Initial cannon and turret states
+        let cannonXPosition = window.innerWidth / 2 - 50; 
+        let turretRotationAngle = 0;
+        let wheelRotationAngle = 0;
+        const minTurretAngle = -20; // Min angle for turret rotation
+        const maxTurretAngle = 35;  // Max angle for turret rotation
+        let isCannonballLaunched = false;
+
+        // Adjust initial cannon position to fit screen
+        cannonXPosition = Math.min(cannonXPosition, window.innerWidth - cannonBody.offsetWidth);
+        updateCannonPosition();
+
+        // Event listener for key press events
+        document.addEventListener('keydown', (event) => {
+            const key = event.key;
+
+            // Move cannon or rotate turret based on key press
+            if (key === 'ArrowLeft') {
+                wheelRotationAngle -= 45;
+                moveCannonLeft();
+            } else if (key === 'ArrowRight') {
+                wheelRotationAngle += 45;
+                moveCannonRight();
+            } else if (key === 'ArrowUp') {
+                rotateTurretUp();
+            } else if (key === 'ArrowDown') {
+                rotateTurretDown();
+            } else if (key === ' ') { // Space key for launching cannonball
+                if (!isCannonballLaunched) {
+                    launchCannonball();
+                }
+            }
+        });
+
+        // Function to move the cannon left
+        function moveCannonLeft() {
+            if (cannonXPosition > 140) {
+                const moveSpeed = document.getElementById("speed").value;
+                cannonXPosition -= 5 * moveSpeed;
+                updateCannonPosition();
+            }
+        }
+
+        // Function to move the cannon right
+        function moveCannonRight() {
+            if (cannonXPosition < (window.innerWidth - cannonBody.offsetWidth) - 80) { 
+                const moveSpeed = document.getElementById("speed").value;
+                cannonXPosition += 5 * moveSpeed;
+                updateCannonPosition();
+            }
+        }
+
+        // Function to update the cannon's position and wheel rotation
+        function updateCannonPosition() {
+            cannonBody.style.left = cannonXPosition + 'px';
+            turret.style.left = cannonXPosition + 'px'; 
+            cannonWheel.style.left = cannonXPosition + 'px';
+            cannonWheel.style.transform = `rotate(${wheelRotationAngle}deg)`;
+        }
+
+        // Function to rotate the turret down
+        function rotateTurretDown() {
+            if (turretRotationAngle < maxTurretAngle) {
+                turretRotationAngle += 5;
+                updateTurretRotation();
+            }
+        }
+
+        // Function to rotate the turret up
+        function rotateTurretUp() {
+            if (turretRotationAngle > minTurretAngle) {
+                turretRotationAngle -= 5;
+                updateTurretRotation();
+            }
+        }
+
+        // Function to update the turret's rotation based on current angle
+        function updateTurretRotation() {
+            turret.style.transform = `rotate(${turretRotationAngle}deg)`;
+        }
+
+        // Function to launch a cannonball
+        function launchCannonball() {
+            isCannonballLaunched = true;
+            const cannonball = document.createElement('div');
+            cannonball.classList.add('cannonball');
+            document.getElementById('gameArea').appendChild(cannonball);
+
+            // Calculate launch angle in radians
+            const angleInRadians = (turretRotationAngle * Math.PI) / 180; 
+
+            // Calculate the starting position of the cannonball
+            const turretBaseX = cannonXPosition + turret.offsetWidth / 2; 
+            const turretBaseY = 250; 
+
+            const turretTipX = turretBaseX + Math.cos(angleInRadians); 
+            const turretTipY = turretBaseY + Math.sin(angleInRadians);
+
+            // Set the initial position of the cannonball
+            cannonball.style.left = turretTipX + 'px';
+            cannonball.style.bottom = turretTipY + 'px';
+
+            // Set the speed and direction of the cannonball
+            const launchSpeed = 15; 
+            const velocityX = launchSpeed * Math.cos(angleInRadians); 
+            const velocityY = -launchSpeed * Math.sin(angleInRadians);
+
+            // Play cannon firing sound
+            const fireSound = new Audio('shot.m4a');
+            fireSound.play();
+
+            // Move the cannonball in regular intervals
+            const interval = setInterval(() => {
+                const currentCannonballX = parseFloat(cannonball.style.left);
+                const currentCannonballY = parseFloat(cannonball.style.bottom);
+                cannonball.style.left = (currentCannonballX + velocityX) + 'px';
+                cannonball.style.bottom = (currentCannonballY + velocityY) + 'px';
+
+                // Remove the cannonball if it goes off the screen
+                if (currentCannonballX > window.innerWidth || currentCannonballY > window.innerHeight || currentCannonballY < 0 || currentCannonballX < 0) {
+                    clearInterval(interval);
+                    cannonball.remove(); 
+                    isCannonballLaunched = false;
+                    fireSound.pause();
+                    fireSound.currentTime = 0;
+                }
+            }, 20);
+        }
+
+        // Adjust the cannon position when the window is resized
+        window.addEventListener('resize', () => {
+            cannonXPosition = Math.min(cannonXPosition, (window.innerWidth - cannonBody.offsetWidth) - 40);
+            updateCannonPosition();
+        });
+    </script>
+</body>
+</html>
